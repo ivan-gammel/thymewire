@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zumpla Previewer - Template Index</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            margin: 0 0 30px 0;
+            font-size: 1.2em;
+        }
+        .tree {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .tree ul {
+            margin: 0;
+            padding-left: 20px;
+            list-style: none;
+        }
+        .folder {
+            margin: 8px 0;
+        }
+        .folder-name {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+        }
+        .folder-name::before {
+            content: "📁";
+            margin-right: 6px;
+        }
+        .template-item {
+            margin: 4px 0;
+            padding: 4px 0;
+        }
+        .template-link {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.95em;
+            display: inline-flex;
+            align-items: center;
+        }
+        .template-link::before {
+            content: "📄";
+            margin-right: 6px;
+        }
+        .template-link:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        .model-links {
+            margin-left: 28px;
+            margin-top: 2px;
+            font-size: 0.85em;
+        }
+        .model-link {
+            color: #95a5a6;
+            text-decoration: none;
+            margin-right: 8px;
+        }
+        .model-link:hover {
+            color: #7f8c8d;
+            text-decoration: underline;
+        }
+        .model-link::before {
+            content: "⎯ ";
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        .empty-state code {
+            background: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zumpla Previewer</h1>
+        <p class="subtitle">Template Index</p>
+
+        <div th:if="${tree.children().isEmpty()}" class="empty-state">
+            <p>No templates found in the configured source directory.</p>
+            <p>Source directory: <code th:text="${config.src}">src/main/resources/templates</code></p>
+        </div>
+
+        <ul th:unless="${tree.children().isEmpty()}" class="tree">
+            <th:block th:replace="~{::renderTree(${tree})}"></th:block>
+        </ul>
+
+        <!-- Recursive tree rendering fragment -->
+        <th:block th:fragment="renderTree(node)" th:if="${node != null}">
+            <th:block th:each="child : ${node.children()}">
+                <!-- Folder -->
+                <th:block th:if="${child.isFolder()}">
+                    <li class="folder">
+                        <div class="folder-name" th:text="${child.name}">Folder</div>
+                        <ul th:if="${!child.children().isEmpty()}">
+                            <th:block th:replace="~{::renderTree(${child})}"></th:block>
+                        </ul>
+                    </li>
+                </th:block>
+
+                <!-- Template -->
+                <th:block th:if="${child.isTemplate()}">
+                    <li class="template-item">
+                        <a th:href="${'/' + child.templateName()}"
+                           class="template-link"
+                           th:text="${child.name}">Template</a>
+
+                        <!-- Model variants -->
+                        <div th:if="${child.templateInfo() != null && child.templateInfo().models.size() > 1}" class="model-links">
+                            <a th:each="model : ${child.templateInfo().models}"
+                               th:unless="${model.default}"
+                               th:href="${'/' + child.templateName() + '?' + modelSelector + '=' + model.id}"
+                               th:text="${model.id}"
+                               class="model-link">Model</a>
+                        </div>
+                    </li>
+                </th:block>
+            </th:block>
+        </th:block>
+    </div>
+</body>
+</html>
